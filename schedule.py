@@ -7,6 +7,7 @@ import pytz
 import matplotlib.pyplot as plt
 import calmap
 import pandas as pd
+from collections import Counter
 
 
 def timeofweek_convert(timeofweek):
@@ -75,7 +76,7 @@ def insert_schedule_to_db():
         get_schedule(streamer)
 
 
-def visualize_schedule(streamer):
+def annual_schedule(streamer):
     streamer_id = get_streamer_id(streamer)
     query = (
         f"SELECT vod_start, duration FROM schedule WHERE streamer_id = {streamer_id};"
@@ -88,10 +89,6 @@ def visualize_schedule(streamer):
     duration = [r[1] for r in records]
     events = pd.DataFrame(duration, columns=["duration"])
     events = events.set_index(pd.DatetimeIndex(pd.to_datetime(days)))["duration"]
-    # for year in years:
-    #    cplot = calmap.yearplot(events, year=year)
-    #    plt.draw()
-    #    plt.show()
     fig = calmap.calendarplot(
         events,
         yearascending=True,
@@ -103,20 +100,160 @@ def visualize_schedule(streamer):
         fillcolor="whitesmoke",
         linewidth=1,
         fig_kws=dict(figsize=(8, 6)),
-        gridspec_kws={"hspace": 0.1}
+        gridspec_kws={"hspace": 0.1},
     )
     plt.draw()
     plt.savefig(f"./annual_schedule/{streamer_id}.pdf", transparent=True)
 
-def generate_visual_schedule():
+
+def generate_annual_schedule():
     streamers = chatlog.get_display_name()
-    for streamer in streamers[:5]:
-        visualize_schedule(streamer)
+    for streamer in streamers:
+        annual_schedule(streamer)
+
+
+# count number of week days
+# https://stackoverflow.com/questions/27391236/number-of-times-each-weekday-occurs-between-two-dates
+def dates_between(start, end):
+    while start <= end:
+        yield start
+        start += datetime.timedelta(1)
+
+
+def count_weekday(start, end):
+    counter = Counter()
+    for date in dates_between(start, end):
+        counter[date.weekday()] += 1
+    return counter
+
+
+# end
+
+
+def weekly_schedule(streamer):
+    streamer_id = get_streamer_id(streamer)
+    # only look in the past 60 days (VOD storage policy)
+    query = f"SELECT vod_start, duration, dayofweek FROM schedule WHERE streamer_id = {streamer_id} and vod_start > '2019-03-01T00:00:00Z';"
+    postgres = tp.Postgres()
+    records = np.array(postgres.rawselect(query))
+    postgres.close()
+    mindate = min(records[:, 0]).date()
+    maxdate = max(records[:, 0]).date()
+    tdelta = (maxdate - mindate).days
+    weekday_counts = count_weekday(mindate, maxdate)
+    total_streamtime = {day: [] for day in range(7)}
+    for record in records:
+        total_streamtime[record[2]].append(int(record[1]))
+    for day in total_streamtime:
+        while len(total_streamtime[day]) < weekday_counts[day]:
+            total_streamtime[day].append(0)
+    position = range(7)
+    x = [np.array(total_streamtime[day]) / 3600.0 for day in range(7)]
+    fig = plt.figure(figsize=(7, 4))
+    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    ax.axhline(8, ls="-", color="k", alpha=0.2)
+    bp = ax.boxplot(x, sym="k+", positions=position)
+    ax.set_ylabel("How long will I stream? (hours)", fontsize=12)
+    ax.set_xticks([0, 1, 2, 3, 4, 5, 6])
+    ax.set_xticklabels(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
+    ax.set_yticks([0, 8, 16, 24])
+    ax.annotate(
+        f"Past {tdelta} days (max up to 60 days)",
+        xy=(1, -0.1),
+        fontsize=8,
+        ha="right",
+        va="top",
+        xycoords="axes fraction",
+    )
+    plt.draw()
+    plt.savefig(f"./weekly_schedule/{streamer_id}.pdf", transparent=True)
+
+
+def generate_weekly_schedule():
+    streamers = chatlog.get_display_name()
+    for streamer in streamers:
+        weekly_schedule(streamer)
+
+
+def datetime_range(start, end, delta):
+    current = start
+    while current < end:
+        yield current
+        current += delta
+
+
+def daily_schedule(streamer):
+    streamer_id = get_streamer_id(streamer)
+    query = f"SELECT vod_start, vod_end FROM schedule WHERE streamer_id = {streamer_id} and vod_start > '2019-03-01T00:00:00Z';"
+    postgres = tp.Postgres()
+    records = np.array(postgres.rawselect(query))
+    postgres.close()
+    minutes = 1
+    freshday = {
+        dt.strftime("%H:%M"): 0
+        for dt in datetime_range(
+            datetime.datetime(year=2019, month=1, day=1, hour=0, minute=0),
+            datetime.datetime(year=2019, month=1, day=1, hour=23, minute=59),
+            datetime.timedelta(minutes=minutes),
+        )
+    }
+    dschedule = pd.DataFrame.from_dict(data=freshday, orient="index", columns=["count"])
+    for record in records:
+        emptyday = pd.DataFrame.from_dict(
+            data=freshday, orient="index", columns=["count"]
+        )
+        workday = {
+            dt.strftime("%H:%M"): 1
+            for dt in datetime_range(
+                record[0], record[1], datetime.timedelta(minutes=minutes)
+            )
+        }
+        workday = pd.DataFrame.from_dict(
+            data=workday, orient="index", columns=["count"]
+        )
+        workday = (emptyday + workday).fillna(int(0))
+        dschedule += workday
+    mindate = min(records[:, 0]).date()
+    maxdate = max(records[:, 0]).date()
+    tdelta = (maxdate - mindate).days
+    fig = plt.figure(figsize=(7, 4))
+    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+    Xlabel = dschedule.index
+    X = range(len(Xlabel))
+    y = dschedule["count"].values
+    ax.bar(x=X, height=y, width=1.0, bottom=0, align="center", color=u"Red", alpha=0.7)
+    ax.set_ylabel(f"Sessions in past {tdelta} days", fontsize=12)
+    Xticks = X[::3*60]
+    ax.set_xticks(Xticks)
+    ax.set_xlim([X[0], X[-1]])
+    ax.set_xticklabels(Xlabel[Xticks])
+    #ax.set_yticks([0, 8, 16, 24])
+    ax.annotate(
+        f"Past {tdelta} days (max up to 60 days)",
+        xy=(1, -0.1),
+        fontsize=8,
+        ha="right",
+        va="top",
+        xycoords="axes fraction",
+    )
+    plt.draw()
+    plt.savefig(f"./daily_schedule/{streamer_id}.pdf", transparent=True)
+
+def generate_daily_schedule():
+    streamers = chatlog.get_display_name()
+    for streamer in streamers:
+        daily_schedule(streamer)
 
 
 if __name__ == "__main__":
     ### Process VOD information into schedule
-    # insert_schedule_to_db()
+    #insert_schedule_to_db()
 
     ### Pretty plots for streaming schedule
-    generate_visual_schedule()
+    generate_annual_schedule()
+
+    ### Pretty weekly plots
+    generate_weekly_schedule()
+
+    ### Pretty daily plots
+    generate_daily_schedule()

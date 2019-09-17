@@ -53,6 +53,7 @@ def get_vod_id(streamer):
         print("chatlog already downloaded")
 
 if __name__=="__main__":
-    streamers = get_display_name()
-    for streamer in streamers:
-        get_vod_id(streamer)
+    #streamers = get_display_name()
+    #for streamer in streamers:
+    #    get_vod_id(streamer)
+    get_vod_id("Darkfirfox")
