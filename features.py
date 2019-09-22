@@ -34,7 +34,7 @@ import sys
 import json
 
 
-def timeofweek(features_dict, flag):
+def timeofweek(features_dict, flag, units):
     streamers = chatlog.get_display_name()
     if flag == "median":
         try:
@@ -42,8 +42,17 @@ def timeofweek(features_dict, flag):
             preload = pickle.load(file)
             print("Preloading timeofweek feature")
             for key in preload:
-                features_dict[key].extend(preload[key])
+                if key in ["columns"]:
+                    features_dict[key].extend(preload[key])
+                    continue
+                if units == "seconds":
+                    features_dict[key].extend(preload[key])
+                elif units == "minutes":
+                    features_dict[key].extend(list(np.array(preload[key]) / 60.0))
+                elif units == "hours":
+                    features_dict[key].extend(list(np.array(preload[key]) / 3600.0))
         except:
+            raise Exception
             print("Generating timeofweek feature")
             columns = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
             features_dict["columns"].extend(columns)
@@ -57,7 +66,12 @@ def timeofweek(features_dict, flag):
                 median = []
                 for dayofweek in range(7):
                     median.append(np.median(result[dayofweek]))
-                features_dict[streamer].extend(median)
+                if units == "seconds":
+                    features_dict[streamer].extend(median)
+                elif units == "minutes":
+                    features_dict[streamer].extend(list(np.array(median) / 60.0))
+                elif units == "hours":
+                    features_dict[streamer].extend(list(np.array(median) / 3600.0))
                 for_pickle[streamer].extend(median)
             file = open("./features/timeofweek_median.pickle", "wb")
             pickle.dump(for_pickle, file)
@@ -91,7 +105,7 @@ def timeofday(features_dict, bins):
                 result_list = np.zeros(len(freshday))
                 days = 0
             binsize = int(np.ceil(len(result_list) / bins))
-            result_binned = np.nanmean(
+            result_binned = np.nanmax(
                 np.pad(
                     result_list.astype(float),
                     (0, binsize - result_list.size % binsize),
@@ -155,14 +169,21 @@ def make_empty_dict():
     features_dict["columns"] = []
     return features_dict
 
+
 def make_features():
     features_dict = make_empty_dict()
+
+    # LABEL DATA
+    #features_dict = label_data(features_dict, success_list=["partner", "affiliate"])
+    features_dict = label_data(features_dict, success_list=["partner"])
+
     # switch on and off features here
 
     # FEATURES FROM TWITCH AND RIOT API
     # Feature for Time of Week
+
     # get median amount of time streamed
-    features_dict = timeofweek(features_dict, 'median')
+    features_dict = timeofweek(features_dict, "median", "hours")
 
     # Feature for Time of Day
     features_dict = timeofday(features_dict, bins=10)
@@ -176,13 +197,34 @@ def make_features():
     # make into dataframe
     columns = features_dict["columns"]
     del features_dict["columns"]
-    features = pd.DataFrame.from_dict(data=features_dict, orient="index", columns=columns)
+    features = pd.DataFrame.from_dict(
+        data=features_dict, orient="index", columns=columns
+    )
 
     # FEATURES FROM CHAT
-
+    print(features.dropna())
     print("feature length:", len(features))
     print("dropna length:", len(features.dropna()))
     return features
+
+
+def label_data(features_dict, success_list=["partner"]):
+    query = "SELECT display_name, broadcaster_type FROM streamer;"
+    postgres = tp.Postgres()
+    records = postgres.rawselect(query)
+    postgres.close()
+    records_dict = {record[0]: record[1] for record in records}
+    records_dict["columns"] = "label"
+    for display_name in features_dict:
+        if display_name in ["columns"]:
+            features_dict[display_name].extend(["label"])
+            continue
+        if records_dict[display_name] in success_list:
+            features_dict[display_name].extend([1])
+        else:
+            features_dict[display_name].extend([0])
+    return features_dict
+
 
 if __name__ == "__main__":
     features = make_features()

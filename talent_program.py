@@ -13,7 +13,7 @@ class Postgres:
         database = "talentdb"
         username = "admin"
         password = "password"
-        port = "5432"
+        port = "5430"
         self.conn = psql.connect(
             host=hostname,
             port=port,
