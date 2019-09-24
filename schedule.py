@@ -106,6 +106,7 @@ def annual_schedule(streamer):
     plt.draw()
     #plt.savefig(f"./annual_schedule/{streamer_id}.pdf", transparent=True)
     plt.savefig(f"./flaskapp/flaskexample/static/annual_schedule/{streamer_id}.png", dpi=300, transparent=False)
+    plt.close()
 
 # count number of week days
 # https://stackoverflow.com/questions/27391236/number-of-times-each-weekday-occurs-between-two-dates
@@ -264,7 +265,7 @@ def daily_schedule(streamer, plot=True):
 
 def generate_daily_schedule():
     streamers = chatlog.get_display_name()
-    for streamer in ["Metaphor"]: # streamers:
+    for streamer in streamers:
         try:
             daily_schedule(streamer)
         except:
@@ -276,7 +277,7 @@ def generate_daily_schedule():
 
 def generate_weekly_schedule():
     streamers = chatlog.get_display_name()
-    for streamer in ["Metaphor"]: #streamers:
+    for streamer in streamers:
         try:
             weekly_schedule(streamer)
         except:
@@ -288,7 +289,7 @@ def generate_weekly_schedule():
 
 def generate_annual_schedule():
     streamers = chatlog.get_display_name()
-    for streamer in ["Metaphor"]: #streamers:
+    for streamer in streamers:
         try:
             annual_schedule(streamer)
         except:
