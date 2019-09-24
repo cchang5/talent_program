@@ -32,6 +32,7 @@ import numpy as np
 import pickle
 import sys
 import json
+import features_chatlog as fchat
 
 
 def timeofweek(features_dict, flag, units):
@@ -193,6 +194,9 @@ def make_features():
 
     # Feature for tier rank
     features_dict = tier_rank(features_dict)
+
+    ### CHAT FEATURES
+    features_dict = fchat.tarray_feature(features_dict, binsize=60)
 
     # make into dataframe
     columns = features_dict["columns"]

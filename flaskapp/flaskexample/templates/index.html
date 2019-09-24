@@ -7,7 +7,7 @@
     <meta name="author" content="">
     <link rel="icon" href="/docs/4.1/assets/img/favicons/favicon.ico">
 
-    <title>Starter Template for Bootstrap</title>
+    <title>Twitch Talent: Wish Upon A Star</title>
 
     <link rel="canonical" href="https://getbootstrap.com/docs/4.1/examples/starter-template/">
 
@@ -21,37 +21,15 @@
 
   <body>
 
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-      <a class="navbar-brand" href="#">Navbar</a>
+    <nav class="navbar navbar-expand-md navbar-light fixed-top" style="background-color: #6441A4;">
+      <a class="navbar-brand" href="./"><span style="color: white; ">New Search</span></a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-
-      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
-        <ul class="navbar-nav mr-auto">
-          <li class="nav-item active">
-            <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">Link</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Disabled</a>
-          </li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="https://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Dropdown</a>
-            <div class="dropdown-menu" aria-labelledby="dropdown01">
-              <a class="dropdown-item" href="#">Action</a>
-              <a class="dropdown-item" href="#">Another action</a>
-              <a class="dropdown-item" href="#">Something else here</a>
-            </div>
-          </li>
-        </ul>
-        <form class="form-inline my-2 my-lg-0">
-          <input class="form-control mr-sm-2" type="text" placeholder="Search" aria-label="Search">
-          <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-        </form>
-      </div>
+      <!-- <ul class="nav navbar-nav flex-row justify-content-md-center justify-content-start flex-nowrap"> -->
+        <div class="container justify-content-md-end">
+        <a class="navbar-brand mx-0 d-none d-md-inline"> <span style="color: white; font-size: xx-large">Twitch Talent</span> </a>
+        </div>
     </nav>
 
     <br><br>
@@ -60,13 +38,12 @@
 
     <div class="starter-template">
         <h2>Discover the next Twitch star!</h2>
-        <p>What kind of streamer are you looking for?</p>
+        <p class="lead">What kind of streamer are you looking for?</p>
     </div>
 
       <div role="main" class = "container">
-      <h5>How 1337 is the gamer?</h5>
       <form  action="/output" method="GET">
-
+        <h5>How 1337 is the gamer? (OR query)</h5>
         <div class="checkbox">
           <label for="tier_challenger">Challenger (top 0.02%)</label>
           <input type="checkbox" id="tier_challenger" name="tier_challenger">
@@ -95,14 +72,42 @@
           <label for="tier_Iron">Iron (top 100%)</label>
           <input type="checkbox" id="tier_iron" name="tier_iron">
         </div>
-
+        <br>
+        <h5>Typical stream time (Day of Week)? (AND query)</h5>
+        <div class="checkbox">
+          <label for="tow_monday">Monday</label>
+          <input type="checkbox" id="tow_monday" name="tow_monday">
+          &nbsp;
+          <label for="tow_tuesday">Tuesday</label>
+          <input type="checkbox" id="tow_tuesday" name="tow_tuesday">
+          &nbsp;
+          <label for="tow_wednesday">Wednesday</label>
+          <input type="checkbox" id="tow_wednesday" name="tow_wednesday">
+          &nbsp;
+          <label for="tow_thursday">Thursday</label>
+          <input type="checkbox" id="tow_thursday" name="tow_thursday">
+          &nbsp;
+          <label for="tow_friday">Friday</label>
+          <input type="checkbox" id="tow_friday" name="tow_friday">
+          &nbsp;
+          <label for="tow_saturday">Saturday</label>
+          <input type="checkbox" id="tow_saturday" name="tow_saturday">
+          &nbsp;
+          <label for="tow_sunday">Sunday</label>
+          <input type="checkbox" id="tow_sunday" name="tow_sunday">
+        </div>
+        <br>
+        <h5>Typical stream time (Time of Day)?</h5>
         <div class="form-group">
-          <label for="rank">Rank:</label>
-          <input type="text" id="rank" name="rank" placeholder="e.g. I">
+          <label for="tod_start">Start Time (0 to 23):</label>
+          <input type="text" id="tod_start" name="tod_start" placeholder="e.g. 10">
+          <br>
+          <label for="tod_end">End Time (0 to 23):</label>
+          <input type="text" id="tod_end" name="tod_end" placeholder="e.g. 17">
         </div>
 
         <div>
-          <button type="submit" class="btn btn-default btn-lg">Find these Streamers!</button>
+          <button type="submit" class="btn btn-default btn-lg">Find Streamer!</button>
         </div>
 
       </form>

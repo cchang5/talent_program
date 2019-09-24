@@ -10035,4 +10035,40 @@ a.text-dark:hover, a.text-dark:focus {
     border-color: #dee2e6;
   }
 }
+
+.container-element {
+  /* some fixed width */
+  width:100%;
+}
+
+.image-element,
+.text-element {
+  display:inline-block;
+  vertical-align:bottom;
+}
+
+.image-element {
+  width:60%;
+}
+
+.text-element {
+  text-align:right;
+  width:40%;
+}
+
+.nav-element {
+  display:block;
+  text-align:center;
+}
+
+#left, #right {
+    border: 2px solid red;
+    background: #ccc;
+
+    vertical-align: bottom;
+    display: inline-block;
+    /* ie6/7 */
+    *display: inline;
+    zoom: 1;
+}
 /*# sourceMappingURL=bootstrap.css.map */

@@ -80,7 +80,7 @@ def insert_schedule_to_db():
 def annual_schedule(streamer):
     streamer_id = get_streamer_id(streamer)
     query = (
-        f"SELECT vod_start, duration FROM schedule WHERE streamer_id = {streamer_id};"
+        f"SELECT vod_start, duration FROM schedule WHERE streamer_id = {streamer_id} AND vod_start > '2019-07-17T00:00:00Z';"
     )
     postgres = tp.Postgres()
     records = np.array(postgres.rawselect(query))
@@ -100,12 +100,12 @@ def annual_schedule(streamer):
         cmap="Reds",
         fillcolor="whitesmoke",
         linewidth=1,
-        fig_kws=dict(figsize=(8, 6)),
+        fig_kws=dict(figsize=(8, 2)),
         gridspec_kws={"hspace": 0.1},
     )
     plt.draw()
-    plt.savefig(f"./annual_schedule/{streamer_id}.pdf", transparent=True)
-
+    #plt.savefig(f"./annual_schedule/{streamer_id}.pdf", transparent=True)
+    plt.savefig(f"./flaskapp/flaskexample/static/annual_schedule/{streamer_id}.png", dpi=300, transparent=False)
 
 # count number of week days
 # https://stackoverflow.com/questions/27391236/number-of-times-each-weekday-occurs-between-two-dates
@@ -172,7 +172,8 @@ def weekly_schedule(streamer, plot=True):
             xycoords="axes fraction",
         )
         plt.draw()
-        plt.savefig(f"./weekly_schedule/{streamer_id}.pdf", transparent=True)
+        #plt.savefig(f"./weekly_schedule/{streamer_id}.pdf", transparent=True)
+        plt.savefig(f"./flaskapp/flaskexample/static/weekly_schedule/{streamer_id}.png", dpi=300, transparent=False)
         plt.close()
     else:
         return total_streamtime
@@ -254,7 +255,8 @@ def daily_schedule(streamer, plot=True):
             xycoords="axes fraction",
         )
         plt.draw()
-        plt.savefig(f"./daily_schedule/{streamer_id}.pdf", transparent=True)
+        #plt.savefig(f"./daily_schedule/{streamer_id}.pdf", transparent=True)
+        plt.savefig(f"./flaskapp/flaskexample/static/daily_schedule/{streamer_id}.png", dpi=300, transparent=False)
         plt.close()
     else:
         return dschedule, tdelta
@@ -262,7 +264,7 @@ def daily_schedule(streamer, plot=True):
 
 def generate_daily_schedule():
     streamers = chatlog.get_display_name()
-    for streamer in streamers:
+    for streamer in ["Metaphor"]: # streamers:
         try:
             daily_schedule(streamer)
         except:
@@ -274,7 +276,7 @@ def generate_daily_schedule():
 
 def generate_weekly_schedule():
     streamers = chatlog.get_display_name()
-    for streamer in streamers:
+    for streamer in ["Metaphor"]: #streamers:
         try:
             weekly_schedule(streamer)
         except:
@@ -286,7 +288,7 @@ def generate_weekly_schedule():
 
 def generate_annual_schedule():
     streamers = chatlog.get_display_name()
-    for streamer in streamers:
+    for streamer in ["Metaphor"]: #streamers:
         try:
             annual_schedule(streamer)
         except:
@@ -302,10 +304,10 @@ if __name__ == "__main__":
     # insert_schedule_to_db()
 
     ### Pretty plots for streaming schedule
-    # generate_annual_schedule()
+    generate_annual_schedule()
 
     ### Pretty weekly plots
-    # generate_weekly_schedule()
+    generate_weekly_schedule()
 
     ### Pretty daily plots
     generate_daily_schedule()
