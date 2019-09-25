@@ -153,6 +153,13 @@ def weekly_schedule(streamer, plot=True):
     for day in total_streamtime:
         while len(total_streamtime[day]) < weekday_counts[day]:
             total_streamtime[day].append(0)
+    if False: #push into sql
+        median_time = np.array([str(np.median(np.array(total_streamtime[day]) / 3600.0)) for day in range(7)])
+        medianQ = ", ".join(median_time)
+        query = f"INSERT INTO weekly_median (streamer_id, mon, tue, wed, thu, fri, sat, sun) VALUES ({streamer_id}, {medianQ});"
+        postgres = tp.Postgres()
+        postgres.rawsql(query)
+        postgres.close()
     if plot:
         position = range(7)
         x = [np.array(total_streamtime[day]) / 3600.0 for day in range(7)]
@@ -265,9 +272,10 @@ def daily_schedule(streamer, plot=True):
 
 def generate_daily_schedule():
     streamers = chatlog.get_display_name()
-    for streamer in streamers:
+    #for streamer in streamers:
+    for streamer in ['Metaphor']:
         try:
-            daily_schedule(streamer)
+            daily_schedule(streamer, False)
         except:
             errorlog = open("./error.txt", "a")
             errorlog.write(f"daily: {streamer}")
@@ -278,8 +286,9 @@ def generate_daily_schedule():
 def generate_weekly_schedule():
     streamers = chatlog.get_display_name()
     for streamer in streamers:
+    #for streamer in ['Metaphor']:
         try:
-            weekly_schedule(streamer)
+            weekly_schedule(streamer, False)
         except:
             errorlog = open("./error.txt", "a")
             errorlog.write(f"weekly: {streamer}")
@@ -290,6 +299,7 @@ def generate_weekly_schedule():
 def generate_annual_schedule():
     streamers = chatlog.get_display_name()
     for streamer in streamers:
+    #for streamer in ['Metaphor']:
         try:
             annual_schedule(streamer)
         except:
@@ -305,10 +315,10 @@ if __name__ == "__main__":
     # insert_schedule_to_db()
 
     ### Pretty plots for streaming schedule
-    generate_annual_schedule()
+    # generate_annual_schedule()
 
     ### Pretty weekly plots
-    generate_weekly_schedule()
+    #generate_weekly_schedule()
 
     ### Pretty daily plots
     generate_daily_schedule()

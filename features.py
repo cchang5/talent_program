@@ -122,6 +122,22 @@ def timeofday(features_dict, bins):
         file = open(f"./features/timeofday_{bins}bins.pickle", "wb")
         pickle.dump(for_pickle, file)
         file.close()
+    if False: # write to sql
+        for streamer in preload:
+            if streamer == "columns":
+                continue
+            query = f"SELECT id FROM streamer WHERE display_name='{streamer}'"
+            postgres = tp.Postgres()
+            streamer_id = np.array(postgres.rawselect(query))[0,0]
+            postgres.close()
+            hourlyQ = ", ".join([str(i) for i in preload[streamer]])
+            coltag = ["day_part%s" %idx for idx in range(24)]
+            coltagQ = ", ".join(coltag)
+            query = f"INSERT INTO hourly_proba (streamer_id, {coltagQ}) VALUES ({streamer_id}, {hourlyQ});"
+            postgres = tp.Postgres()
+            postgres.rawsql(query)
+            postgres.close()
+
     return features_dict
 
 
