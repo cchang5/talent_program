@@ -1,7 +1,4 @@
 chatlog/
-annual_schedule/
-weekly_schedule/
-daily_schedule/
 .idea/
 __pycache__/
 client_id.yaml

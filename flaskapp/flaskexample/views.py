@@ -3,6 +3,7 @@ from flaskexample import app
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
 import pandas as pd
+import numpy as np
 import psycopg2
 
 from flask import request
@@ -29,6 +30,7 @@ def index():
 
 @app.route("/output")
 def streamers_output():
+    where_query = []
     # pull 'tier' from input field and store it
     tier = dict()
     tier["CHALLENGER"] = request.args.get("tier_challenger")
@@ -41,11 +43,52 @@ def streamers_output():
     tier["BRONZE"] = request.args.get("tier_bronze")
     tier["IRON"] = request.args.get("tier_iron")
     join_tier = "' OR tier = '".join([key for key in tier if tier[key] == "on"])
-    query_tier = f"(tier='{join_tier}')"
-    print("OUTPUT")
-    print(tier)
+    if join_tier == "":
+        pass
+    else:
+        where_query.append(f"(tier='{join_tier}')")
+    # pull day of week
+    week = dict()
+    week["mon"] = request.args.get("tow_monday")
+    week["tue"] = request.args.get("tow_tuesday")
+    week["wed"] = request.args.get("tow_wednesday")
+    week["thu"] = request.args.get("tow_thursday")
+    week["fri"] = request.args.get("tow_friday")
+    week["sat"] = request.args.get("tow_saturday")
+    week["sun"] = request.args.get("tow_sunday")
+    join_week = [f"{key} > 4" for key in week if week[key] == "on"]
+    if join_week == []:
+        pass
+    else:
+        where_query.append("(%s)" % " AND ".join(join_week))
+    # pull time of day
+    request_start = request.args.get("tod_start")
+    request_end = request.args.get("tod_end")
+    if request_start == "" or request_end == "":
+        pass
+    else:
+        try:
+            hour_start = int(request.args.get("tod_start"))
+            hour_end = int(request.args.get("tod_end"))
+        except:
+            return render_template("index.html", error_message = "Start and End time needs to be a number!")
+        if hour_start < hour_end:
+            join_hour = np.arange(hour_start, hour_end + 1)
+        else:
+            join_hour = np.concatenate(
+                (np.arange(hour_end, 24), np.arange(0, hour_start + 1))
+            )
+        join_hour = [f"day_part{hour} > 0.25" for hour in join_hour]
+        where_query.append("(%s)" % " AND ".join(join_hour))
+    # join where query
+    if where_query == []:
+        where_query = ""
+    elif len(where_query) == 1:
+        where_query = f"AND {where_query[0]}"
+    else:
+        where_query = " AND %s " % " AND ".join(where_query)
     # select from the database for the tier that the user inputs
-    query = f"SELECT * FROM streamer WHERE {query_tier} ORDER BY tier, rank;"
+    query = f"SELECT * FROM twitch_talent WHERE (proba > 0.1) {where_query} ORDER BY proba DESC;"
     print(query)
     query_results = pd.read_sql_query(query, con)
     print(query_results)
@@ -54,6 +97,7 @@ def streamers_output():
         streamers.append(
             dict(
                 id=query_results.iloc[i]["id"],
+                proba=int(100*query_results.iloc[i]["proba"]),
                 display_name=query_results.iloc[i]["display_name"],
                 tier=query_results.iloc[i]["tier"],
                 rank=query_results.iloc[i]["rank"],

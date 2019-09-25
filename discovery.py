@@ -1,6 +1,8 @@
 # talent discovery script
 # makes the ML sausage
 import features
+import talent_program as tp
+
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix
@@ -25,10 +27,13 @@ def prepare_data():
     return X, y
 
 
-def stratcrossvalid(X, y, model, THRESHOLD_LIST=[0.0, 0.5, 1.0], n_splits=5):
+def stratcrossvalid(X, y, THRESHOLD_LIST=[0.0, 0.5, 1.0], n_splits=5):
     score = []
     skf = StratifiedKFold(n_splits=n_splits)
     for train_idx, test_idx in skf.split(X, y):
+        model = LogisticRegression(
+            penalty="elasticnet", solver="saga", l1_ratio=1, max_iter=10000
+        )
         train_X = X.iloc[train_idx]
         train_y = y.iloc[train_idx]
         val_X = X.iloc[test_idx]
@@ -42,7 +47,7 @@ def stratcrossvalid(X, y, model, THRESHOLD_LIST=[0.0, 0.5, 1.0], n_splits=5):
     score_mean = [np.mean(s) for s in np.transpose(score)]
     score_sdev = [np.std(s) for s in np.transpose(score)]
     gvscore = [gv.gvar(score_mean[i], score_sdev[i]) for i in range(len(score_mean))]
-    return gvscore
+    return gvscore, score, model
 
 
 def sausage(X, y):
@@ -72,28 +77,41 @@ def sausage(X, y):
     print("coefficients")
     print(model.coef_)
 
-    probs = model.predict_proba(val_X)[:, 1]
-    fpr, tpr, thresholds = roc_curve(val_y, probs)
-    # plot no skill
-    pyplot.plot([0, 1], [0, 1], linestyle="--")
-    # plot the roc curve for the model
-    pyplot.plot(fpr, tpr, marker=".")
-    # show the plot
-    pyplot.show()
+    if False: # ROC curve
+        probs = model.predict_proba(val_X)[:, 1]
+        fpr, tpr, thresholds = roc_curve(val_y, probs)
+        # plot no skill
+        pyplot.plot([0, 1], [0, 1], linestyle="--")
+        # plot the roc curve for the model
+        pyplot.plot(fpr, tpr, marker=".")
+        # show the plot
+        pyplot.show()
 
     # cross validation
     threshlist = np.linspace(0, 1, 21)
-    gvscore_list = stratcrossvalid(X, y, model, THRESHOLD_LIST=threshlist)
+    gvscore_list, score, model = stratcrossvalid(X, y, THRESHOLD_LIST=threshlist)
+    predict_proba = model.predict_proba(X)
+    for idx, display_name in enumerate(X.index):
+        query = f"SELECT id FROM streamer WHERE display_name='{display_name}';"
+        postgres = tp.Postgres()
+        streamer_id = np.array(postgres.rawselect(query))[0,0]
+        postgres.close()
+        proba = predict_proba[idx][1]
+        query = f"INSERT INTO prediction (streamer_id, proba) VALUES({streamer_id}, {proba});"
+        postgres = tp.Postgres()
+        postgres.rawsql(query)
+        postgres.close()
 
-    fig = plt.figure(figsize=(7, 4))
-    ax = plt.axes([0.15, 0.15, 0.8, 0.8])
-    ax.errorbar(
-        x=threshlist,
-        y=[i.mean for i in gvscore_list],
-        yerr=[i.sdev for i in gvscore_list],
-    )
-    plt.draw()
-    plt.show()
+    if False:
+        fig = plt.figure(figsize=(7, 4))
+        ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+        ax.errorbar(
+            x=threshlist,
+            y=[i.mean for i in gvscore_list],
+            yerr=[i.sdev for i in gvscore_list],
+        )
+        plt.draw()
+        plt.show()
     """
     scores = cross_val_score(model, X, y, cv=cv, scoring="recall")
     print(scores)

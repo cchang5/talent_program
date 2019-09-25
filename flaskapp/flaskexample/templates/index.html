@@ -39,11 +39,13 @@
     <div class="starter-template">
         <h2>Discover the next Twitch star!</h2>
         <p class="lead">What kind of streamer are you looking for?</p>
+        <p style="color:red">{{ error_message }}</p>
     </div>
 
       <div role="main" class = "container">
       <form  action="/output" method="GET">
-        <h5>How 1337 is the gamer? (OR query)</h5>
+        <h5>How 1337 is the gamer?</h5>
+        <p>OR query, unselected = no preference</p>
         <div class="checkbox">
           <label for="tier_challenger">Challenger (top 0.02%)</label>
           <input type="checkbox" id="tier_challenger" name="tier_challenger">
@@ -73,7 +75,8 @@
           <input type="checkbox" id="tier_iron" name="tier_iron">
         </div>
         <br>
-        <h5>Typical stream time (Day of Week)? (AND query)</h5>
+        <h5>Typical stream time (Day of Week)?</h5>
+        <p>AND query > 4 hours, unselected = no preference</p>
         <div class="checkbox">
           <label for="tow_monday">Monday</label>
           <input type="checkbox" id="tow_monday" name="tow_monday">
@@ -98,6 +101,7 @@
         </div>
         <br>
         <h5>Typical stream time (Time of Day)?</h5>
+        <p>AND query > 25% availability, unselected = no preference</p>
         <div class="form-group">
           <label for="tod_start">Start Time (0 to 23):</label>
           <input type="text" id="tod_start" name="tod_start" placeholder="e.g. 10">
