@@ -149,7 +149,7 @@ def tarray_feature(features_dict, binsize=60):
             file.close()
     for key in features_dict:
         features_dict[key].extend(excitement_dict[key])
-    if True: # push into database
+    if False: # push into database
         for streamer in excitement_dict:
             if streamer == "columns":
                 continue

@@ -19,7 +19,7 @@
     <link href="starter-template.css" rel="stylesheet">
   </head>
 
-  <body>
+  <body style="background-color:rgba(0, 0, 0, 0);">
 
     <nav class="navbar navbar-expand-md navbar-light fixed-top" style="background-color: #6441A4;">
       <a class="navbar-brand" href="./"><span style="color: white; ">New Search</span></a>
@@ -43,13 +43,13 @@
             <img src= {{ profile_image_url }} alt="Twitch Profile Pix" style="width:240px;height:240px;vertical-align: bottom">
           </p>
         </div>
-        <div id="right" style="float:right; vertical-align: bottom">
+        <div id="left" style="float:left; vertical-align: bottom">
           <p>
             <!--<object data={{ profile_image_url }} type="application/pdf">
                 <iframe src="https://docs.google.com/viewer?url={{ profile_image_url }}&embedded=true" style="float:right"></iframe>
             </object>
             -->
-            <img src= {{ profile_image_url }} alt="Twitch Profile Pix" style="width:240px;height:240px;vertical-align: bottom">
+            <img src= static/hexagram/{{ streamer_id }}.png alt="Hexagram" style="width:300px;height:300px;vertical-align: bottom">
           </p>
         </div>
         <div id="left" style="float:leftt; vertical-align: bottom">
