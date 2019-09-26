@@ -98,6 +98,7 @@ def streamers_output():
             dict(
                 id=query_results.iloc[i]["id"],
                 proba=int(100*query_results.iloc[i]["proba"]),
+                excite=int(query_results.iloc[i]["excite"]),
                 display_name=query_results.iloc[i]["display_name"],
                 tier=query_results.iloc[i]["tier"],
                 rank=query_results.iloc[i]["rank"],
@@ -110,7 +111,7 @@ def streamers_output():
 @app.route("/portfolio")
 def streamers_portfolio():
     display_name = request.args.get("display_name")
-    query = f"SELECT * FROM streamer WHERE display_name = '{display_name}';"
+    query = f"SELECT * FROM twitch_talent WHERE display_name = '{display_name}';"
     print(query)
     query_results = pd.read_sql_query(query, con)
     streamer_id = query_results["id"].iloc[0]

@@ -39,9 +39,9 @@
       </div>
 
       <table class="table table-hover">
-        <tr><th>Star Power!</th><th>Streamer</th><th>Skillz</th><th>Affiliation</th></tr>
+        <tr><th>Star Power!</th><th>Chat Energy</th><th>Streamer</th><th>Skillz</th><th>Affiliation</th></tr>
       {% for streamer in streamers %}
-        <tr><td>{{ streamer['proba'] }}</td><td><a href="./portfolio?display_name={{ streamer['display_name']}}">{{ streamer['display_name']}}</a></td><td>{{ streamer['tier'] }} {{ streamer['rank'] }}</td><td>{{ streamer['broadcaster_type']}}</td></tr>
+        <tr><td>{{ streamer['proba'] }}</td><td>{{ streamer['excite'] }}</td><td><a href="./portfolio?display_name={{ streamer['display_name']}}">{{ streamer['display_name']}}</a></td><td>{{ streamer['tier'] }} {{ streamer['rank'] }}</td><td>{{ streamer['broadcaster_type']}}</td></tr>
       {% endfor %}
       </table>
 

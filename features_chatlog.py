@@ -149,6 +149,19 @@ def tarray_feature(features_dict, binsize=60):
             file.close()
     for key in features_dict:
         features_dict[key].extend(excitement_dict[key])
+    if True: # push into database
+        for streamer in excitement_dict:
+            if streamer == "columns":
+                continue
+            postgres = tp.Postgres()
+            query = f"SELECT id FROM streamer WHERE display_name='{streamer}';"
+            streamer_id = np.array(postgres.rawselect(query))[0, 0]
+            postgres.close()
+            excite = excitement_dict[streamer][0]
+            query = f"INSERT INTO excitement (streamer_id, excite) VALUES ({streamer_id}, {excite});"
+            postgres = tp.Postgres()
+            postgres.rawsql(query)
+            postgres.close()
     return features_dict
 
 def main():
