@@ -92,87 +92,58 @@ def transformed_cut(median):
 
 def tarray_feature(features_dict, binsize=60):
     # make features out of timearray of chatlogs
-    try:
-        a = asdf
-        file = open(f"./features/excitement.pickle", "rb")
-        excitement_dict = pickle.load(file)
-        print(f"Preloading excitement feature")
-    except:
-        excitement_dict = dict()
-        excitement_dict["columns"] = ["excitement"]
-        streamers = chatlog.get_display_name()
-        #for streamer in streamers:
-        for streamer in ['Metaphor']:
-            # get streamer_id
-            query = f"SELECT id FROM streamer WHERE display_name='{streamer}';"
-            postgres = tp.Postgres()
-            streamer_id = np.array(postgres.rawselect(query))[0, 0]
-            postgres.close()
-            query = f"SELECT timearray FROM chatlog WHERE streamer_id={streamer_id};"
-            postgres = tp.Postgres()
-            records = postgres.rawselect(query)
-            postgres.close()
-            """
-            for record in records[:1]:
-                binned_chat = np.array(record[0])//binsize
-                binned_counter = np.bincount(binned_chat)
-                bins = len(binned_counter)
-                fig = plt.figure(figsize=(7,4))
-                ax = plt.axes([0.15, 0.15, 0.8, 0.8])
-                ax.hist(binned_chat, bins=bins)
-                plt.show()
-            """
-            concat_chat = [0]
-            for record in records:
-                concat_chat.extend(np.array(record[0])+concat_chat[-1])
-            binned_chat = np.array(concat_chat) // binsize
+    excitement_dict = dict()
+    excitement_dict["columns"] = ["excitement"]
+    streamers = chatlog.get_display_name()
+    #for streamer in streamers:
+    for streamer in ["Metaphor"]:
+        # get streamer_id
+        query = f"SELECT id FROM streamer WHERE display_name='{streamer}';"
+        postgres = tp.Postgres()
+        streamer_id = np.array(postgres.rawselect(query))[0, 0]
+        postgres.close()
+        query = f"SELECT timearray FROM chatlog WHERE streamer_id={streamer_id};"
+        postgres = tp.Postgres()
+        records = postgres.rawselect(query)
+        postgres.close()
+        """
+        for record in records[:1]:
+            binned_chat = np.array(record[0])//binsize
             binned_counter = np.bincount(binned_chat)
             bins = len(binned_counter)
-            sort_counter = np.sort(binned_counter)
-            median = np.median(sort_counter)
-            #print("median:", sort_counter[bins//2])
-            #print("middle 90%:", sort_counter[int(bins*0.95)], sort_counter[int(bins*0.05)])
-            excite_count = 0
-            for event in sort_counter:
-                if event > transformed_cut(median):
-                    excite_count += 1
-            #if sort_counter[bins//2] == 0:
-            #    excite_count = 0
-            #print("cutoff:", transformed_cut(median))
-            #print(excite_count)
-            excitements_per_hour = excite_count/(bins*binsize)*3600.
-            excitement_dict[streamer] = [excitements_per_hour]
-            # FIGURE
-            fig = plt.figure(figsize=(7, 4))
+            fig = plt.figure(figsize=(7,4))
             ax = plt.axes([0.15, 0.15, 0.8, 0.8])
-            n, bins, patches = ax.hist(binned_chat, bins=bins, color="#6441A4")
-            ax.axhline(transformed_cut(median), color="red")
-            ax.set_xlim([0, max(bins)])
-            ax.set_ylim([0, 100])
-            ax.set_xlabel("Minutes in stream", fontsize=16)
-            ax.set_ylabel("Lines of chat / minute", fontsize=16)
-            plt.tick_params(axis="both", labelsize=16)
-            plt.savefig(f"./features/chathistory.png", dpi=300, transparent=False)
+            ax.hist(binned_chat, bins=bins)
             plt.show()
-            # END FIGURE
-            #file = open(f"./features/excitement.pickle", "wb")
-            #pickle.dump(excitement_dict, file)
-            #file.close()
+        """
+        concat_chat = [0]
+        for record in records:
+            concat_chat.extend(np.array(record[0])+concat_chat[-1])
+        binned_chat = np.array(concat_chat) // binsize
+        binned_counter = np.bincount(binned_chat)
+        bins = len(binned_counter)
+        sort_counter = np.sort(binned_counter)
+        median = np.median(sort_counter)
+        excite_count = 0
+        for event in sort_counter:
+            if event > transformed_cut(median):
+                excite_count += 1
+        excitements_per_hour = excite_count/(bins*binsize)*3600.
+        excitement_dict[streamer] = [excitements_per_hour]
+        # FIGURE
+        fig = plt.figure(figsize=(7, 4))
+        ax = plt.axes([0.15, 0.15, 0.8, 0.8])
+        ax.hist(binned_chat, bins=bins)
+        ax.axhline(transformed_cut(median), color="red")
+        ax.set_ylim([0, 100])
+        ax.set_xlim([0, max(binned_chat)])
+        ax.set_xlabel("Minutes in stream", fontsize=16)
+        ax.set_ylabel("Lines of chat / minute", fontsize=16)
+        plt.savefig("./plots/chat_frequency.png", dpi=300, transparent=False)
+        #plt.show()
+        # END FIGURE
     for key in features_dict:
         features_dict[key].extend(excitement_dict[key])
-    if False: # push into database
-        for streamer in excitement_dict:
-            if streamer == "columns":
-                continue
-            postgres = tp.Postgres()
-            query = f"SELECT id FROM streamer WHERE display_name='{streamer}';"
-            streamer_id = np.array(postgres.rawselect(query))[0, 0]
-            postgres.close()
-            excite = excitement_dict[streamer][0]
-            query = f"INSERT INTO excitement (streamer_id, excite) VALUES ({streamer_id}, {excite});"
-            postgres = tp.Postgres()
-            postgres.rawsql(query)
-            postgres.close()
     return features_dict
 
 def main():

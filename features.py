@@ -187,7 +187,7 @@ def make_empty_dict():
     return features_dict
 
 
-def make_features():
+def make_features(normalize=True):
     features_dict = make_empty_dict()
 
     # LABEL DATA
@@ -225,6 +225,10 @@ def make_features():
     print(features.dropna())
     print("feature length:", len(features))
     print("dropna length:", len(features.dropna()))
+
+    if normalize:
+        pass
+
     return features
 
 
